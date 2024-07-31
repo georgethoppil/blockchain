@@ -1,12 +1,13 @@
 use std::error::Error;
 
-use b::{Cli, Config};
+use b::{Blockchain, Cli, Config};
 use clap::Parser;
 
 fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
     let config = Config {
         command: cli.command,
+        blockchain: Blockchain::new(),
     };
 
     match config.run() {
