@@ -1,5 +1,5 @@
+mod blockchain;
 mod config;
-mod server;
 
+pub use blockchain::*;
 pub use config::*;
-pub use server::*;

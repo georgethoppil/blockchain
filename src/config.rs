@@ -2,6 +2,8 @@ use std::error::Error;
 
 use clap::{Parser, Subcommand};
 
+use crate::Blockchain;
+
 #[derive(Parser)]
 #[command(name = "b")]
 #[command(about = "Best blockchain")]
@@ -29,6 +31,7 @@ pub enum Commands {
 
 pub struct Config {
     pub command: Commands,
+    pub blockchain: Blockchain,
 }
 
 impl Config {
