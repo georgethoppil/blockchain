@@ -1,16 +1,19 @@
-use std::error::Error;
+use std::{
+    error::Error,
+    sync::{Arc, Mutex},
+};
 
 use b::{Blockchain, Cli, Config};
 use clap::Parser;
 
-fn main() -> Result<(), Box<dyn Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
     let config = Config {
         command: cli.command,
-        blockchain: Blockchain::new(),
     };
 
-    match config.run() {
+    match config.run().await {
         Err(err) => {
             println!("something went wrong {}", err);
             Err(err)

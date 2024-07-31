@@ -12,7 +12,7 @@ impl Block {
         Block { transactions }
     }
 }
-
+#[derive(Debug, Clone)]
 pub struct Blockchain {
     chain: Vec<Block>,
     accounts: HashMap<String, u64>,
@@ -28,10 +28,6 @@ impl Blockchain {
             accounts: HashMap::new(),
             pending_transactions: Vec::new(),
         }
-    }
-
-    pub fn start_chain(&mut self) {
-        println!("Block chain is starting");
     }
 
     fn add_block(&mut self) {
