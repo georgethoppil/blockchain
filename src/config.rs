@@ -1,46 +1,29 @@
 use std::error::Error;
 
-use clap::{Parser, Subcommand};
+use clap::Parser;
 
-use crate::Blockchain;
+use crate::{start_server, Command};
 
 #[derive(Parser)]
 #[command(name = "b")]
 #[command(about = "Best blockchain")]
 pub struct Cli {
     #[command(subcommand)]
-    pub command: Commands,
-}
-
-#[derive(Subcommand)]
-pub enum Commands {
-    StartNode,
-    CreateAccount {
-        id: String,
-        starting_balance: u64,
-    },
-    Transfer {
-        from_account: String,
-        to_account: String,
-        amount: u64,
-    },
-    Balance {
-        account: String,
-    },
+    pub command: Command,
 }
 
 pub struct Config {
-    pub command: Commands,
-    pub blockchain: Blockchain,
+    pub command: Command,
 }
 
 impl Config {
-    pub fn run(&self) -> Result<(), Box<dyn Error>> {
+    pub async fn run(&self) -> Result<(), Box<dyn Error>> {
         match &self.command {
-            Commands::StartNode => {
+            Command::StartNode => {
                 println!("Starting the blockchain node...");
+                start_server().await;
             }
-            Commands::CreateAccount {
+            Command::CreateAccount {
                 id,
                 starting_balance,
             } => {
@@ -49,7 +32,7 @@ impl Config {
                     id, starting_balance
                 );
             }
-            Commands::Transfer {
+            Command::Transfer {
                 from_account,
                 to_account,
                 amount,
@@ -59,7 +42,7 @@ impl Config {
                     amount, from_account, to_account
                 );
             }
-            Commands::Balance { account } => {
+            Command::Balance { account } => {
                 println!("Getting balance for account: {}", account);
             }
         }
