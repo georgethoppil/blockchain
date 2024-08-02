@@ -1,9 +1,6 @@
-use std::{
-    error::Error,
-    sync::{Arc, Mutex},
-};
+use std::error::Error;
 
-use b::{Blockchain, Cli, Config};
+use b::{Cli, Config};
 use clap::Parser;
 
 #[tokio::main]

@@ -1,17 +1,17 @@
+use std::io;
+
+use bytes::{BufMut, BytesMut};
 use clap::Subcommand;
-use mini_redis::Frame;
 
-use crate::parse::Parse;
+use serde::{Deserialize, Serialize};
+use tokio_util::codec::{Decoder, Encoder};
 
-pub type Result<T> = std::result::Result<T, Error>;
-pub type Error = Box<dyn std::error::Error + Send + Sync>;
-
-#[derive(Subcommand)]
+#[derive(Subcommand, Serialize, Deserialize, Debug)]
 pub enum Command {
     StartNode,
     CreateAccount {
         id: String,
-        starting_balance: u64,
+        balance: u64,
     },
     Transfer {
         from_account: String,
@@ -23,28 +23,30 @@ pub enum Command {
     },
 }
 
-impl Command {
-    pub fn from_frame(frame: Frame) -> Result<Command> {
-        let mut parse = Parse::new(frame)?;
-        let command_name = parse.next_string()?.to_lowercase();
-        let command = match &command_name[..] {
-            // "get" => Command::Get(Get::parse_frames(&mut parse)?),
-            // "publish" => Command::Publish(Publish::parse_frames(&mut parse)?),
-            // "set" => Command::Set(Set::parse_frames(&mut parse)?),
-            // "subscribe" => Command::Subscribe(Subscribe::parse_frames(&mut parse)?),
-            // "unsubscribe" => Command::Unsubscribe(Unsubscribe::parse_frames(&mut parse)?),
-            // _ => {
-            //     // The command is not recognized and an Unknown command is
-            //     // returned.
-            //     //
-            //     // `return` is called here to skip the `finish()` call below. As
-            //     // the command is not recognized, there is most likely
-            //     // unconsumed fields remaining in the `Parse` instance.
-            //     return Ok(Command::Unknown(Unknown::new(command_name)));
-            // }
-            _ => return Ok(Command::StartNode),
-        };
-        parse.finish()?;
-        Ok(command)
+pub struct CommandCodec;
+
+impl Encoder<Command> for CommandCodec {
+    type Error = io::Error;
+
+    fn encode(&mut self, item: Command, dst: &mut BytesMut) -> Result<(), Self::Error> {
+        let bytes =
+            serde_json::to_vec(&item).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        dst.put_slice(&bytes);
+        Ok(())
+    }
+}
+
+impl Decoder for CommandCodec {
+    type Item = Command;
+    type Error = io::Error;
+
+    fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
+        if src.is_empty() {
+            return Ok(None);
+        }
+        let command: Command =
+            serde_json::from_slice(&src).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
+        src.clear();
+        Ok(Some(command))
     }
 }

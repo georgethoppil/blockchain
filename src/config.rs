@@ -2,7 +2,7 @@ use std::error::Error;
 
 use clap::Parser;
 
-use crate::{start_server, Command};
+use crate::{Client, Command, Server};
 
 #[derive(Parser)]
 #[command(name = "b")]
@@ -21,16 +21,19 @@ impl Config {
         match &self.command {
             Command::StartNode => {
                 println!("Starting the blockchain node...");
-                start_server().await;
+                Server::start_node().await;
             }
-            Command::CreateAccount {
-                id,
-                starting_balance,
-            } => {
+            Command::CreateAccount { id, balance } => {
                 println!(
                     "Creating account with id: {} and starting balance: {}",
-                    id, starting_balance
+                    id, balance
                 );
+
+                let _ = Client::run_command(Command::CreateAccount {
+                    id: id.clone(),
+                    balance: balance.clone(),
+                })
+                .await;
             }
             Command::Transfer {
                 from_account,
@@ -41,9 +44,19 @@ impl Config {
                     "Transferring {} from {} to {}",
                     amount, from_account, to_account
                 );
+                let _ = Client::run_command(Command::Transfer {
+                    from_account: from_account.clone(),
+                    to_account: to_account.clone(),
+                    amount: amount.clone(),
+                })
+                .await;
             }
             Command::Balance { account } => {
                 println!("Getting balance for account: {}", account);
+                let _ = Client::run_command(Command::Balance {
+                    account: account.clone(),
+                })
+                .await;
             }
         }
         Ok(())
