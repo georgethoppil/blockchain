@@ -47,16 +47,20 @@ impl Blockchain {
         self.accounts.get(account).cloned()
     }
 
-    pub fn transfer(&mut self, from_account: String, to_account: String, amount: u64) {
+    pub fn transfer(
+        &mut self,
+        from_account: String,
+        to_account: String,
+        amount: u64,
+    ) -> Option<String> {
         // check if both accounts exist
         if !self.accounts.contains_key(&from_account) || !self.accounts.contains_key(&to_account) {
-            println!("account doesn't exist");
-            return;
+            return Some("account doesn't exist".to_string());
         }
 
         // if there is sufficient amounts
         if self.accounts[&from_account] < amount {
-            println!("Insufficient amount in the account");
+            return Some("Insufficient amount in the account".to_string());
         }
 
         let transaction = Transaction {
@@ -66,12 +70,12 @@ impl Blockchain {
             account_id: None,
         };
         self.pending_transactions.push(transaction);
+        None
     }
 
-    pub fn create_account(&mut self, id: String, starting_balance: u64) {
+    pub fn create_account(&mut self, id: String, starting_balance: u64) -> Option<String> {
         if self.accounts.contains_key(&id) {
-            println!("Account already exists");
-            return;
+            return Some("Account already exists".to_string());
         }
 
         let transaction = Transaction {
@@ -81,6 +85,7 @@ impl Blockchain {
             account_id: Some(id),
         };
         self.pending_transactions.push(transaction);
+        None
     }
 
     fn process_pending_transactions(&mut self) {
