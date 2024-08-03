@@ -8,19 +8,42 @@ use tokio_util::codec::{Decoder, Encoder};
 
 #[derive(Subcommand, Serialize, Deserialize, Debug)]
 pub enum Command {
+    /// Start the blockchain node
     StartNode,
+    /// Create a new account
     CreateAccount {
+        #[clap(help = "ID of the account")]
         id: String,
+        #[clap(help = "Starting balance of the account", value_parser = greater_than_zero)]
         balance: u64,
     },
+    /// Transfer funds between accounts
     Transfer {
+        #[clap(help = "ID of the source account")]
         from_account: String,
+        #[clap(help = "ID of the destination account")]
         to_account: String,
+        #[clap(help = "Amount to transfer", value_parser = greater_than_zero)]
         amount: u64,
     },
+    /// Get the balance of an account
     Balance {
+        #[clap(help = "ID of the account to query")]
         account: String,
     },
+    #[clap(skip)]
+    Ack { message: String },
+}
+
+fn greater_than_zero(val: &str) -> Result<u64, String> {
+    let amount: u64 = val
+        .parse()
+        .map_err(|_| format!("'{}' is not a valid number", val))?;
+    if amount > 0 {
+        Ok(amount)
+    } else {
+        Err(format!("Amount must be greater than 0, but got '{}'", val))
+    }
 }
 
 pub struct CommandCodec;

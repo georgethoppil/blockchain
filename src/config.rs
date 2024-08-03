@@ -33,7 +33,7 @@ impl Config {
                     id: id.clone(),
                     balance: balance.clone(),
                 })
-                .await;
+                .await?;
             }
             Command::Transfer {
                 from_account,
@@ -49,14 +49,17 @@ impl Config {
                     to_account: to_account.clone(),
                     amount: amount.clone(),
                 })
-                .await;
+                .await?;
             }
             Command::Balance { account } => {
                 println!("Getting balance for account: {}", account);
                 let _ = Client::run_command(Command::Balance {
                     account: account.clone(),
                 })
-                .await;
+                .await?;
+            }
+            _ => {
+                println!("invalid command");
             }
         }
         Ok(())

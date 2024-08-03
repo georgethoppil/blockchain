@@ -1,11 +1,9 @@
 use crate::{Blockchain, Command, CommandCodec};
-use futures::StreamExt;
-use std::{
-    sync::{Arc, Mutex},
-    time::Duration,
-};
+use futures::{SinkExt, StreamExt};
+use std::{sync::Arc, time::Duration};
 use tokio::{
     net::{TcpListener, TcpStream},
+    sync::Mutex,
     time::interval,
 };
 use tokio_util::codec::Framed;
@@ -26,7 +24,7 @@ impl Server {
             let mut interval = interval(Duration::from_secs(10));
             loop {
                 interval.tick().await;
-                if let Ok(mut blockchain) = db_clone.lock() {
+                if let Ok(mut blockchain) = db_clone.try_lock() {
                     blockchain.add_block();
                 } else {
                     println!("problem accessing blockchain node in interval");
@@ -48,48 +46,37 @@ impl Server {
         let mut framed = Framed::new(socket, CommandCodec);
         println!("processing socket connection");
         while let Some(Ok(command)) = framed.next().await {
-            match command {
-                Command::CreateAccount { id, balance } => {
-                    println!("creating account with values {id} {balance}");
-                    if let Ok(mut blockchain) = db.lock() {
-                        blockchain.create_account(id, balance);
-                    } else {
-                        println!("problem accessing blockchain node for create account in socket processing");
-                    }
+            let mut blockchain = match db.try_lock() {
+                Ok(guard) => guard,
+                Err(_) => {
+                    eprintln!("Failed to acquire lock on blockchain");
+                    return;
                 }
+            };
+
+            let message = match command {
+                Command::CreateAccount { id, balance } => blockchain
+                    .create_account(id, balance)
+                    .unwrap_or_else(|| "Account creation is added to the blockchain".to_string()),
                 Command::Transfer {
                     from_account,
                     to_account,
                     amount,
-                } => {
-                    println!(
-                        "transfer fund details from {from_account} to {to_account} for ${amount}"
-                    );
-                    if let Ok(mut blockchain) = db.lock() {
-                        blockchain.transfer(from_account, to_account, amount);
-                    } else {
-                        println!("problem accessing blockchain node for transfering amounts in socket processing");
-                    }
-                }
-                Command::Balance { account } => {
-                    println!("balance for {account}");
-                    if let Ok(blockchain) = db.lock() {
-                        if let Some(balance) = blockchain.get_balance(&account) {
-                            println!("Account has $ {balance}");
-                        } else {
-                            println!("Account not found");
-                        }
-                    } else {
-                        println!(
-                            "problem accessing blockchain node for balance in socket processing"
-                        );
-                    }
-                }
+                } => blockchain
+                    .transfer(from_account, to_account, amount)
+                    .unwrap_or_else(|| "The transfer is added to the blockchain".to_string()),
+                Command::Balance { account } => blockchain
+                    .get_balance(&account)
+                    .map(|balance| format!("balance is {}", balance))
+                    .unwrap_or_else(|| "Account not found".to_string()),
 
-                _ => {
-                    println!("invalid command");
-                }
+                _ => "invalid command to process".to_string(),
             };
+
+            if let Err(e) = framed.send(Command::Ack { message }).await {
+                eprintln!("Failed to send Ack: {:?}", e);
+                break;
+            }
         }
     }
 }
