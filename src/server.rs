@@ -1,6 +1,6 @@
-use crate::{Blockchain, Command, CommandCodec};
+use crate::{Blockchain, Command, CommandCodec, Configuration};
 use futures::{SinkExt, StreamExt};
-use std::{sync::Arc, time::Duration};
+use std::{error::Error, sync::Arc, time::Duration};
 use tokio::{
     net::{TcpListener, TcpStream},
     sync::Mutex,
@@ -10,18 +10,33 @@ use tokio_util::codec::Framed;
 
 type Db = Arc<Mutex<Blockchain>>;
 
-pub struct Server;
+pub struct Server {
+    host: String,
+    port: u16,
+    mining_timeout: u64,
+}
 
 impl Server {
-    pub async fn start_node() {
-        let listener = TcpListener::bind("127.0.0.1:6370").await.unwrap();
+    pub fn build(config: Configuration) -> Self {
+        Server {
+            host: config.application.host,
+            port: config.application.port,
+            mining_timeout: config.application.mining_timeout,
+        }
+    }
+
+    pub async fn start_node(&self) -> Result<(), Box<dyn Error>> {
+        let listener = TcpListener::bind(format!("{}:{}", self.host, self.port))
+            .await
+            .unwrap();
         let blockchain = Arc::new(Mutex::new(Blockchain::new()));
         println!("starting server");
 
-        // start 10 second interval to add block to the chain and process pending transactions
+        // start mining interval to add block to the chain and process pending transactions
         let db_clone = blockchain.clone();
+        let mining_timeout = self.mining_timeout;
         tokio::spawn(async move {
-            let mut interval = interval(Duration::from_secs(10));
+            let mut interval = interval(Duration::from_secs(mining_timeout));
             loop {
                 interval.tick().await;
                 if let Ok(mut blockchain) = db_clone.try_lock() {
@@ -34,7 +49,7 @@ impl Server {
 
         //handle incoming socket requests
         loop {
-            let (socket, _) = listener.accept().await.unwrap();
+            let (socket, _) = listener.accept().await?;
             let db = blockchain.clone();
             tokio::spawn(async move {
                 Self::process(socket, db).await;

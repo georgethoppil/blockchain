@@ -4,13 +4,22 @@ use futures::{SinkExt, StreamExt};
 use tokio::net::TcpStream;
 use tokio_util::codec::Framed;
 
-use crate::{Command, CommandCodec};
+use crate::{Command, CommandCodec, Configuration};
 
-pub struct Client;
+pub struct Client {
+    host: String,
+    port: u16,
+}
 
 impl Client {
-    pub async fn run_command(command: Command) -> Result<(), Box<dyn Error>> {
-        let stream = TcpStream::connect("127.0.0.1:6370").await?;
+    pub fn build(config: Configuration) -> Self {
+        Client {
+            host: config.application.host,
+            port: config.application.port,
+        }
+    }
+    pub async fn run_command(&self, command: Command) -> Result<(), Box<dyn Error>> {
+        let stream = TcpStream::connect(format!("{}:{}", self.host, self.port)).await?;
         let mut framed = Framed::new(stream, CommandCodec);
         framed.send(command).await?;
 
