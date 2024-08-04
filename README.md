@@ -12,8 +12,8 @@ This is a simple blockchain application implemented in Rust. It allows you to st
 1. Clone the repository:
 
    ```
-   git clone https://github.com/yourusername/blockchain-app.git
-   cd blockchain-app
+   git clone https://github.com/georgethoppil/blockchain.git
+   cd blockchain-main
    ```
 
 2. Set up the configuration:
