@@ -23,14 +23,4 @@ async fn main() -> Result<(), Box<dyn Error>> {
         }
         _ => Ok(()),
     }
-    /*
-
-
-
-       3. Add proper tracing
-
-       5. Add test cases
-       6. Add readme + proper instructions
-
-    */
 }
