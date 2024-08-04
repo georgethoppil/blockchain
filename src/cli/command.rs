@@ -6,6 +6,7 @@ use clap::Subcommand;
 use serde::{Deserialize, Serialize};
 use tokio_util::codec::{Decoder, Encoder};
 
+/// Represents the various commands that can be executed in the blockchain application
 #[derive(Subcommand, Serialize, Deserialize, Debug)]
 pub enum Command {
     /// Start the blockchain node
@@ -31,10 +32,12 @@ pub enum Command {
         #[clap(help = "ID of the account to query")]
         account: String,
     },
+    /// Acknowledgment command
     #[clap(skip)]
     Ack { message: String },
 }
 
+/// Validates that the input is a positive number
 fn greater_than_zero(val: &str) -> Result<u64, String> {
     let amount: u64 = val
         .parse()
@@ -46,11 +49,13 @@ fn greater_than_zero(val: &str) -> Result<u64, String> {
     }
 }
 
+/// Codec for serializing and deserializing Command objects
 pub struct CommandCodec;
 
 impl Encoder<Command> for CommandCodec {
     type Error = io::Error;
 
+    /// Encodes a Command into bytes
     fn encode(&mut self, item: Command, dst: &mut BytesMut) -> Result<(), Self::Error> {
         let bytes =
             serde_json::to_vec(&item).map_err(|e| io::Error::new(io::ErrorKind::Other, e))?;
@@ -63,6 +68,7 @@ impl Decoder for CommandCodec {
     type Item = Command;
     type Error = io::Error;
 
+    /// Decodes bytes into a Command
     fn decode(&mut self, src: &mut BytesMut) -> Result<Option<Self::Item>, Self::Error> {
         if src.is_empty() {
             return Ok(None);

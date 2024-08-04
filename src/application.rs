@@ -2,17 +2,20 @@ use std::error::Error;
 
 use crate::{Client, Command, Configuration, Server};
 
+/// Represents the main application that coordinates blockchain operations
 #[derive(Debug, Clone)]
 pub struct Application {
     pub config: Configuration,
 }
 
 impl Application {
+    /// Builds a new Application instance with the given configuration
     pub fn build(configuration: Configuration) -> Self {
         Application {
             config: configuration,
         }
     }
+    /// Runs the appropriate command based on user input
     pub async fn run(&self, command: &Command) -> Result<(), Box<dyn Error>> {
         match command {
             Command::StartNode => {
