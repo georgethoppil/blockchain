@@ -30,7 +30,7 @@ impl Server {
             .await
             .unwrap();
         let blockchain = Arc::new(Mutex::new(Blockchain::new()));
-        println!("starting server");
+        tracing::debug!("starting server");
 
         // start mining interval to add block to the chain and process pending transactions
         let db_clone = blockchain.clone();
@@ -42,7 +42,7 @@ impl Server {
                 if let Ok(mut blockchain) = db_clone.try_lock() {
                     blockchain.add_block();
                 } else {
-                    println!("problem accessing blockchain node in interval");
+                    tracing::debug!("problem accessing blockchain node in interval");
                 }
             }
         });
@@ -59,12 +59,12 @@ impl Server {
 
     async fn process(socket: TcpStream, db: Db) {
         let mut framed = Framed::new(socket, CommandCodec);
-        println!("processing socket connection");
+        tracing::debug!("processing socket connection");
         while let Some(Ok(command)) = framed.next().await {
             let mut blockchain = match db.try_lock() {
                 Ok(guard) => guard,
                 Err(_) => {
-                    eprintln!("Failed to acquire lock on blockchain");
+                    tracing::error!("Failed to acquire lock on blockchain");
                     return;
                 }
             };
@@ -89,7 +89,7 @@ impl Server {
             };
 
             if let Err(e) = framed.send(Command::Ack { message }).await {
-                eprintln!("Failed to send Ack: {:?}", e);
+                tracing::error!("Failed to send Ack: {:?}", e);
                 break;
             }
         }

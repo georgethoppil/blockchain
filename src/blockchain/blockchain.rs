@@ -32,14 +32,14 @@ impl Blockchain {
 
     pub fn add_block(&mut self) {
         if self.pending_transactions.len() > 0 {
-            println!("Adding pending transcations to blockchain");
+            tracing::debug!("Adding pending transcations to blockchain");
             let new_block = Block::new(self.pending_transactions.clone());
             Self::process_pending_transactions(self);
             self.chain.push(new_block);
             self.pending_transactions.clear();
-            println!("State of blockchain {:#?}", self);
+            tracing::debug!("State of blockchain {:#?}", self);
         } else {
-            println!("No pending transactions to add to blockchain");
+            tracing::debug!("No pending transactions to add to blockchain");
         }
     }
 
