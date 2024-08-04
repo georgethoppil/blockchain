@@ -16,13 +16,14 @@ impl Application {
     pub async fn run(&self, command: &Command) -> Result<(), Box<dyn Error>> {
         match command {
             Command::StartNode => {
-                println!("Starting the blockchain node...");
+                tracing::debug!("Starting the blockchain node...");
                 Server::build(self.config.clone()).start_node().await?;
             }
             Command::CreateAccount { id, balance } => {
-                println!(
+                tracing::debug!(
                     "Creating account with id: {} and starting balance: {}",
-                    id, balance
+                    id,
+                    balance
                 );
 
                 let _ = Client::build(self.config.clone())
@@ -37,9 +38,11 @@ impl Application {
                 to_account,
                 amount,
             } => {
-                println!(
+                tracing::debug!(
                     "Transferring {} from {} to {}",
-                    amount, from_account, to_account
+                    amount,
+                    from_account,
+                    to_account
                 );
                 let _ = Client::build(self.config.clone())
                     .run_command(Command::Transfer {
@@ -50,7 +53,7 @@ impl Application {
                     .await?;
             }
             Command::Balance { account } => {
-                println!("Getting balance for account: {}", account);
+                tracing::debug!("Getting balance for account: {}", account);
                 let _ = Client::build(self.config.clone())
                     .run_command(Command::Balance {
                         account: account.clone(),
@@ -58,7 +61,7 @@ impl Application {
                     .await?;
             }
             _ => {
-                println!("invalid command");
+                tracing::debug!("invalid command");
             }
         }
         Ok(())
