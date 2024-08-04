@@ -3,8 +3,8 @@ use std::collections::HashMap;
 use super::Transaction;
 #[derive(Debug, Clone)]
 
-struct Block {
-    transactions: Vec<Transaction>,
+pub struct Block {
+    pub transactions: Vec<Transaction>,
 }
 
 impl Block {
@@ -14,9 +14,9 @@ impl Block {
 }
 #[derive(Debug, Clone)]
 pub struct Blockchain {
-    chain: Vec<Block>,
-    accounts: HashMap<String, u64>,
-    pending_transactions: Vec<Transaction>,
+    pub chain: Vec<Block>,
+    pub accounts: HashMap<String, u64>,
+    pub pending_transactions: Vec<Transaction>,
 }
 
 impl Blockchain {
@@ -55,7 +55,7 @@ impl Blockchain {
     ) -> Option<String> {
         // check if both accounts exist
         if !self.accounts.contains_key(&from_account) || !self.accounts.contains_key(&to_account) {
-            return Some("account doesn't exist".to_string());
+            return Some("Account doesn't exist".to_string());
         }
 
         // if there is sufficient amounts
