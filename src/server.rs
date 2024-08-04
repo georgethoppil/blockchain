@@ -8,8 +8,10 @@ use tokio::{
 };
 use tokio_util::codec::Framed;
 
+/// Shared blockchain state protected by a mutex
 type Db = Arc<Mutex<Blockchain>>;
 
+/// Represents the blockchain server
 pub struct Server {
     host: String,
     port: u16,
@@ -17,6 +19,7 @@ pub struct Server {
 }
 
 impl Server {
+    /// Builds a new Server instance with the given configuration
     pub fn build(config: Configuration) -> Self {
         Server {
             host: config.application.host,
@@ -25,6 +28,7 @@ impl Server {
         }
     }
 
+    /// Starts the blockchain node, listening for incoming connections and processing blocks
     pub async fn start_node(&self) -> Result<(), Box<dyn Error>> {
         let listener = TcpListener::bind(format!("{}:{}", self.host, self.port))
             .await
@@ -32,7 +36,7 @@ impl Server {
         let blockchain = Arc::new(Mutex::new(Blockchain::new()));
         tracing::debug!("starting server");
 
-        // start mining interval to add block to the chain and process pending transactions
+        // Start mining interval to add block to the chain and process pending transactions
         let db_clone = blockchain.clone();
         let mining_timeout = self.mining_timeout;
         tokio::spawn(async move {
@@ -47,7 +51,7 @@ impl Server {
             }
         });
 
-        //handle incoming socket requests
+        // Handle incoming socket requests
         loop {
             let (socket, _) = listener.accept().await?;
             let db = blockchain.clone();
@@ -57,6 +61,7 @@ impl Server {
         }
     }
 
+    /// Processes incoming client connections and commands
     async fn process(socket: TcpStream, db: Db) {
         let mut framed = Framed::new(socket, CommandCodec);
         tracing::debug!("processing socket connection");
