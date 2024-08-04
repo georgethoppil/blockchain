@@ -39,14 +39,14 @@ This is a simple blockchain application implemented in Rust. It allows you to st
      port: 8000
    ```
 
-3. Set the environment variable:
+3. Set the environment variable(optional):
    ```
    export APP_ENVIRONMENT=local
    ```
 
-## Building/Running the Application
+## Development
 
-To run debug version of the app:
+To run development version of the app:
 
 1. Start the blockchain node:
 
@@ -54,10 +54,11 @@ To run debug version of the app:
    cargo run -- start-node
    ```
 
-2. Create a new account:
+2. Create a new accounts:
 
    ```
    cargo run -- create-account alice 1000
+   cargo run -- create-account bob 1000
    ```
 
 3. Transfer funds between accounts:
@@ -71,6 +72,8 @@ To run debug version of the app:
    cargo run -- balance alice
    ```
 
+## Release build
+
 To build the application, run:
 
 ```
@@ -78,7 +81,7 @@ cargo build --release
 ```
 
 This will create an executable in the `target/release` directory.
-After building, you can run the application using the `b` command (assuming you've set up your PATH to include the release directory and the config directory). Here are some example commands:
+After building, you can run the application using the `b` command (assuming you've included the config directory). Here are some example commands:
 
 1. Start the blockchain node:
 
@@ -120,16 +123,6 @@ The application uses a command-line interface with the following structure:
   - `balance`: Gets the balance of an account
     - `--account`: ID of the account to query
 
-## Development
-
-To run the application in development mode:
-
-1. Ensure you've set `APP_ENVIRONMENT=local`.
-2. Use `cargo run` instead of the `b` command. For example:
-   ```
-   cargo run -- start-node
-   ```
-
 ## Testing
 
 To run the tests for the application:
@@ -137,16 +130,3 @@ To run the tests for the application:
 ```
 cargo test
 ```
-
-## Configuration
-
-The application uses a layered configuration system:
-
-1. Base configuration (`base.yaml`)
-2. Environment-specific configuration (`local.yaml` or `production.yaml`)
-3. Environment variables (prefixed with `APP_` and using `__` as a separator)
-
-To change the configuration, you can:
-
-- Modify the YAML files in the `configuration` directory
-- Set environment variables, e.g., `export APP_APPLICATION__PORT=9000`
