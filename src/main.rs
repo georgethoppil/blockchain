@@ -1,16 +1,14 @@
 use std::error::Error;
 
-use b::{Cli, Config};
+use b::{get_configuration, Application, Cli};
 use clap::Parser;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
-    let config = Config {
-        command: cli.command,
-    };
+    let configuration = get_configuration().expect("Failed to read configuration");
 
-    match config.run().await {
+    match Application::build(configuration).run(&cli.command).await {
         Err(err) => {
             println!("something went wrong {}", err);
             Err(err)
@@ -20,8 +18,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     /*
 
 
-      2. add config/
-      2.5 rename some class files
+
        3. Add proper tracing
 
        5. Add test cases
